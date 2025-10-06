@@ -1,0 +1,243 @@
+{
+  "info": {
+    "name": "Myappy v1.0.0 API (Auto-Tests)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201/200', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var data = {}; try { data = pm.response.json(); } catch(e) {}",
+                  "if (data.token) { pm.environment.set('token', data.token); }",
+                  "if (data._id) { pm.environment.set('userId', data._id); }",
+                  "pm.test('Token set to env', function () { pm.expect(pm.environment.get('token')).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "var data = {}; try { data = pm.response.json(); } catch(e) {}",
+                  "if (data.token) { pm.environment.set('token', data.token); }",
+                  "if (data._id) { pm.environment.set('userId', data._id); }",
+                  "pm.test('Token set to env', function () { pm.expect(pm.environment.get('token')).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Listings",
+      "item": [
+        {
+          "name": "Create Listing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"iPhone 13 Pro\",\n  \"description\": \"Second-hand good condition\",\n  \"price\": 25000,\n  \"images\": [\"image1.jpg\"]\n}"
+            },
+            "url": "{{base_url}}/api/listings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Created 201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const j = pm.response.json(); if (j && j._id) { pm.environment.set('listingId', j._id); }",
+                  "pm.test('listingId saved', function () { pm.expect(pm.environment.get('listingId')).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Listings",
+          "request": { "method": "GET", "url": "{{base_url}}/api/listings" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Is array', function(){ const j = pm.response.json(); pm.expect(Array.isArray(j)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Listing By Id",
+          "request": { "method": "GET", "url": "{{base_url}}/api/listings/{{listingId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [ "pm.test('Status 200', function () { pm.response.to.have.status(200); });" ] }
+            }
+          ]
+        },
+        {
+          "name": "Update Listing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 23900\n}" },
+            "url": "{{base_url}}/api/listings/{{listingId}}"
+          }
+        },
+        {
+          "name": "Delete Listing",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": "{{base_url}}/api/listings/{{listingId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"listingId\": \"{{listingId}}\"\n}" },
+            "url": "{{base_url}}/api/orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Created 201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const j = pm.response.json(); if (j && j._id) { pm.environment.set('orderId', j._id); }",
+                  "pm.test('orderId saved', function () { pm.expect(pm.environment.get('orderId')).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": "{{base_url}}/api/orders/my"
+          }
+        },
+        {
+          "name": "Update Order Status (seller only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\"\n}" },
+            "url": "{{base_url}}/api/orders/{{orderId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Make Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 25000,\n  \"method\": \"mock\"\n}" },
+            "url": "{{base_url}}/api/payments/{{orderId}}"
+          }
+        },
+        {
+          "name": "Get My Payments",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": "{{base_url}}/api/payments/my"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "Ask",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"วิธีซื้อสินค้า\"\n}" },
+            "url": "{{base_url}}/api/chatbot"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" },
+    { "key": "listingId", "value": "" },
+    { "key": "orderId", "value": "" }
+  ]
+}

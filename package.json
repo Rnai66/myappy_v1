@@ -1,0 +1,18 @@
+{
+  "name": "myappy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm run start --prefix backend",
+    "dev": "npm run dev --prefix backend",
+    "server": "npm run server --prefix backend",
+    "reset-users": "npm run reset-users --prefix backend",
+    "client": "npm start --prefix frontend",
+    "client-dev": "npm run dev --prefix frontend",
+    "install-all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev-all": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
